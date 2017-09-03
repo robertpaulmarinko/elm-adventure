@@ -9,6 +9,8 @@
 
 module Main exposing (..)
 
+
+-- 3rd party modules
 import Html exposing (Html, div, p, ul, li, text, map, i)
 import Keyboard exposing (..)
 import Keyboard.Extra exposing (Key(..))
@@ -16,33 +18,25 @@ import Array exposing (Array)
 import Time exposing (Time, second, millisecond)
 import Char exposing (..)
 
+-- Modules in this project
 import Display
+import Map
+import Player
 
 type Msg
     = KeyboardMsg Keyboard.Extra.Msg
     | KeyPressed Char
     | MoveArrow Time
 
-type alias Player =
-    {   location: Display.Location
-      , lastDelta: Display.Location
-    }
-
-type alias PlayerArrow =
-    { 
-        released: Bool
-      , location: Display.Location
-      , direction: Display.Location
-    }
 
 type alias Model =
     { pressedKeys : List Key
-      , player1 : Player
-      , player2 : Player
-      , player1Arrow : PlayerArrow
-      , player2Arrow : PlayerArrow
-      , walls : List String
-      , wallsAsArray : Array (Array Char)
+      , player1 : Player.Player
+      , player2 : Player.Player
+      , player1Arrow : Player.PlayerArrow
+      , player2Arrow : Player.PlayerArrow
+      , walls : Map.Walls
+      , wallsAsArray : Map.WallsAsArray
     }
 
 
@@ -128,8 +122,8 @@ update msg model =
             (
             { model
                 | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
-                , player1 = getPlayersNewLocation model model.player1 arrows.x arrows.y
-                , player2 = getPlayersNewLocation model model.player2 wasd.x wasd.y
+                , player1 = Player.getPlayersNewLocation model.wallsAsArray model.player1 arrows.x arrows.y
+                , player2 = Player.getPlayersNewLocation model.wallsAsArray model.player2 wasd.x wasd.y
             }
             , Cmd.none
             )
@@ -158,8 +152,8 @@ update msg model =
             ( 
                  {
                      model
-                    | player1Arrow = getPlayersArrowNewLocation model model.player1Arrow
-                    , player2Arrow = getPlayersArrowNewLocation model model.player2Arrow
+                    | player1Arrow = Player.getPlayersArrowNewLocation model.wallsAsArray model.player1Arrow
+                    , player2Arrow = Player.getPlayersArrowNewLocation model.wallsAsArray model.player2Arrow
                  }
                 , Cmd.none 
             )
@@ -175,69 +169,11 @@ view model =
             , div [] (Display.renderWalls model.walls)
             ]
 
-getPlayersNewLocation : Model -> Player -> Int -> Int -> Player
-getPlayersNewLocation model currentLocation deltaX deltaY =
-        let
-            newLocation = 
-                { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
-            playerWallElement =
-                getWallElement model newLocation
-            lastDelta =
-                if deltaX /= 0 || deltaY /= 0 then
-                    { x = deltaX, y = deltaY }
-                else
-                    currentLocation.lastDelta
-        in
-            if playerWallElement == ' ' then
-                -- allow player to move
-                { currentLocation |
-                      location = { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
-                    , lastDelta = lastDelta
-                }
-            else
-                -- player has hit a wall, don't allow them to move
-                currentLocation
-
-
-getPlayersArrowNewLocation : Model -> PlayerArrow -> PlayerArrow
-getPlayersArrowNewLocation model currentLocation =
-        let
-            newLocation = 
-                { x = currentLocation.location.x + currentLocation.direction.x, y = currentLocation.location.y - currentLocation.direction.y }
-            playerWallElement =
-                getWallElement model newLocation
-        in
-            if currentLocation.released then
-                if playerWallElement == ' ' then
-                    -- allow arrow to move
-                    { currentLocation |
-                        location = newLocation
-                    }
-                else
-                    -- player has hit a wall, don't allow them to move
-                    { currentLocation |
-                        released = False
-                    }
-            else
-                -- arrow not moving
-                currentLocation
-
-
-getWallElement : Model -> Display.Location -> Char
-getWallElement model location =
-        case Array.get location.y model.wallsAsArray of
-            Nothing ->
-                '#'
-            Just val ->
-                case Array.get location.x val of
-                    Nothing ->
-                        '#'
-                    Just val ->
-                        val
 
 
 
-renderPlayerArrow : PlayerArrow -> String -> Html msg
+
+renderPlayerArrow : Player.PlayerArrow -> String -> Html msg
 renderPlayerArrow playerArrow element =
     if playerArrow.released then
         Display.renderSingleElement playerArrow.location element
