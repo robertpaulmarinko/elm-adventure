@@ -10,33 +10,29 @@
 module Main exposing (..)
 
 import Html exposing (Html, div, p, ul, li, text, map, i)
-import Html.Attributes exposing ( style, class )
 import Keyboard exposing (..)
 import Keyboard.Extra exposing (Key(..))
 import Array exposing (Array)
 import Time exposing (Time, second, millisecond)
 import Char exposing (..)
 
+import Display
 
 type Msg
     = KeyboardMsg Keyboard.Extra.Msg
     | KeyPressed Char
     | MoveArrow Time
 
-type alias Location =
-    { x: Int
-    , y : Int}
-
 type alias Player =
-    {   location: Location
-      , lastDelta: Location
+    {   location: Display.Location
+      , lastDelta: Display.Location
     }
 
 type alias PlayerArrow =
     { 
         released: Bool
-      , location: Location
-      , direction: Location
+      , location: Display.Location
+      , direction: Display.Location
     }
 
 type alias Model =
@@ -172,11 +168,11 @@ view : Model -> Html msg
 view model =
         div []
             [
-            renderSingleElement model.player1.location "2"
-            , renderSingleElement model.player2.location "1"
+            Display.renderSingleElement model.player1.location "2"
+            , Display.renderSingleElement model.player2.location "1"
             , renderPlayerArrow model.player1Arrow "A"
             , renderPlayerArrow model.player2Arrow "A"
-            , div [] (renderWalls model.walls)
+            , div [] (Display.renderWalls model.walls)
             ]
 
 getPlayersNewLocation : Model -> Player -> Int -> Int -> Player
@@ -227,7 +223,7 @@ getPlayersArrowNewLocation model currentLocation =
                 currentLocation
 
 
-getWallElement : Model -> Location -> Char
+getWallElement : Model -> Display.Location -> Char
 getWallElement model location =
         case Array.get location.y model.wallsAsArray of
             Nothing ->
@@ -240,68 +236,14 @@ getWallElement model location =
                         val
 
 
--- --------------------------------------------------------
--- This function is used to render a single element (player, wall, etc) on the screen
--- --------------------------------------------------------
-
-renderSingleElement : Location -> String -> Html msg
-renderSingleElement location element =
-  let
-    left = 
-      toString (location.x * 24) ++ "px"
-
-    top = 
-      toString (location.y * 24) ++ "px" 
-
-    (className, color) = 
-        case element of
-            "#" -> ("fa fa-square fa-2x fa-fw", "brown") -- wall
-            "B" -> ("fa fa-th-large fa-2x fa-fw", "grey") -- wall
-            "1" -> ("fa fa-male fa-2x fa-fw", "blue") -- player 1
-            "2" -> ("fa fa-female fa-2x fa-fw", "yellow") -- player 2
-            "A" -> ("fa fa-cog fa-spin fa-2x fa-fw", "red") -- player arrow
-            _ -> ("", "white")
- in
-    i [ style [("position", "absolute") ,("left", left), ("top", top), ("color", color) ] , class className ] [ ] 
 
 renderPlayerArrow : PlayerArrow -> String -> Html msg
 renderPlayerArrow playerArrow element =
     if playerArrow.released then
-        renderSingleElement playerArrow.location element
+        Display.renderSingleElement playerArrow.location element
     else
         i [] []
 
--- --------------------------------------------------------
--- These functions are used to render the static walls
--- --------------------------------------------------------
-type alias WallsWithRowType = { row: Int, wallString: String }
-type alias WallsWithRowAndColType = { row: Int, col: Int, wallString: String }
-    
-addRowIndex: List (String) -> List (WallsWithRowType)
-addRowIndex rows = 
-    List.indexedMap (\index wallString -> { row = index, wallString = wallString }) rows
-
-addColIndex : WallsWithRowType -> List (WallsWithRowAndColType)
-addColIndex wallsWithRow  = 
-    List.indexedMap (\index ws -> { row = wallsWithRow.row, col = index, wallString = (String.fromChar ws) }) (String.toList wallsWithRow.wallString)
-
-
-renderWalls : List String -> List (Html msg)
-renderWalls walls =
-    let
-        -- adds the row number to each item
-        wallsWithRow = addRowIndex walls
-        -- adds the col number, but is a list of lists
-        wallsWIthRowAndCol = List.map addColIndex wallsWithRow
-        -- convert lists of lists into a flat list
-        flatList = List.concatMap (\lrc -> lrc) wallsWIthRowAndCol
-    in
-        List.map (\w -> renderSingleElement { x = w.col, y = w.row } w.wallString) flatList
-
-
--- --------------------------------------------------------
--- end renderWalls
--- --------------------------------------------------------
 
 
 -- --------------------------------------------------------
