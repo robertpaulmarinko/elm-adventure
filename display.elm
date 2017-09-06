@@ -1,6 +1,6 @@
 -- This module contains functions for rendering output to the screen
 
-module Display exposing (Location, renderSingleElement, renderWalls)
+module Display exposing (Location, renderSingleElement, renderString, renderWalls, renderScore)
 
 import Html exposing (Html, div, p, ul, li, text, map, i)
 import Html.Attributes exposing ( style, class )
@@ -9,26 +9,41 @@ type alias Location =
     { x: Int
     , y : Int}
 
+elementSize: Int
+elementSize = 24
+
 -- renders a single element to the screen
 renderSingleElement : Location -> String -> Html msg
 renderSingleElement location element =
   let
     left = 
-      toString (location.x * 24) ++ "px"
+      toString (location.x * elementSize) ++ "px"
 
     top = 
-      toString (location.y * 24) ++ "px" 
+      toString (location.y * elementSize) ++ "px" 
 
     (className, color) = 
         case element of
             "#" -> ("fa fa-square fa-2x fa-fw", "brown") -- wall
             "B" -> ("fa fa-th-large fa-2x fa-fw", "grey") -- wall
+            "$" -> ("fa fa-star fa-2x fa-fw", "green") -- prize
             "1" -> ("fa fa-male fa-2x fa-fw", "blue") -- player 1
             "2" -> ("fa fa-female fa-2x fa-fw", "yellow") -- player 2
             "A" -> ("fa fa-cog fa-spin fa-2x fa-fw", "red") -- player arrow
             _ -> ("", "white")
  in
     i [ style [("position", "absolute") ,("left", left), ("top", top), ("color", color) ] , class className ] [ ] 
+
+renderString : Location -> String -> String -> String -> Html msg
+renderString location string className color =
+  let
+    left = 
+      toString (location.x * elementSize) ++ "px"
+
+    top = 
+      toString (location.y * elementSize) ++ "px" 
+ in
+    div [ style [("position", "absolute") ,("left", left), ("top", top), ("color", color) ] , class className ] [ text string ]
 
 
 -- --------------------------------------------------------
@@ -59,3 +74,13 @@ renderWalls walls =
         List.map (\w -> renderSingleElement { x = w.col, y = w.row } w.wallString) flatList
 
 
+-- --------------------------------------------------------
+-- These functions are used to render the score
+-- --------------------------------------------------------
+renderScore : Location -> String -> Int -> List (Html msg)
+renderScore location element score =
+    let
+        scoreLocation = { x = location.x + 2, y = location.y}
+    in
+        [renderSingleElement location element
+        ,renderString scoreLocation (toString score) "score-value" "white"]

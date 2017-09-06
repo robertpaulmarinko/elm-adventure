@@ -55,21 +55,21 @@ init =
      walls = [
              "##################################################################"
             ,"#                           #      #                             #"
-            ,"#                           #      #                             #"
+            ,"#        $                  # $    #                             #"
             ,"#                           #      #                             #"
             ,"#                           ###  ###                             #"
             ,"#                                                                #"
-            ,"#                                                                #"
+            ,"#           $                         $                          #"
             ,"#                   BBBBBBB                                      #"
             ,"#                   B     B                                      #"
-            ,"#                   B                                            #"
+            ,"#                   B $                                          #"
             ,"#                   B     BBBBB                                  #"
             ,"#                                                                #"
             ,"#                                                                #"
+            ,"#            $                                                   #"
             ,"#                                                                #"
             ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
+            ,"#                 $                   $                          #"
             ,"#                                                                #"
             ,"#                                                                #"
             ,"#                                                                #"
@@ -79,14 +79,8 @@ init =
     in
     ( { 
         pressedKeys = []
-        , player1 = { 
-            location = { x = 2, y = 2 }
-            , lastDelta = { x = 0, y = 0 }
-            }
-        , player2 = { 
-            location = { x = 10, y = 2 }
-            , lastDelta = { x = 0, y = 0 } 
-        }
+        , player1 = Player.initPlayer { x = 2, y = 2 }
+        , player2 = Player.initPlayer { x = 10, y = 2 }
         , player1Arrow = {
             location = { x = 0, y = 0 }
             , direction = { x = 0, y = 0 }
@@ -146,9 +140,6 @@ update msg model =
                 ( model, Cmd.none )
 
         MoveArrow time ->
-            let
-                somevalue = 1
-            in
             ( 
                  {
                      model
@@ -162,15 +153,14 @@ view : Model -> Html msg
 view model =
         div []
             [
-            Display.renderSingleElement model.player1.location "2"
+              Display.renderSingleElement model.player1.location "2"
             , Display.renderSingleElement model.player2.location "1"
             , renderPlayerArrow model.player1Arrow "A"
             , renderPlayerArrow model.player2Arrow "A"
             , div [] (Display.renderWalls model.walls)
+            , div [] (Display.renderScore { x = 10, y=25 } "2" model.player1.score)
+            , div [] (Display.renderScore { x = 20, y=25 } "1" model.player2.score)
             ]
-
-
-
 
 
 renderPlayerArrow : Player.PlayerArrow -> String -> Html msg
@@ -179,6 +169,7 @@ renderPlayerArrow playerArrow element =
         Display.renderSingleElement playerArrow.location element
     else
         i [] []
+
 
 
 

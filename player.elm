@@ -1,13 +1,14 @@
 -- This module has types and functions related to the players
 
-module Player exposing (Player, PlayerArrow, getPlayersNewLocation, getPlayersArrowNewLocation)
+module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, getPlayersArrowNewLocation)
 
 import Display exposing (Location)
-import Map exposing (WallsAsArray, getWallElement)
+import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
 
 type alias Player =
     {   location: Display.Location
       , lastDelta: Display.Location
+      , score: Int
     }
 
 type alias PlayerArrow =
@@ -17,28 +18,45 @@ type alias PlayerArrow =
       , direction: Display.Location
     }
 
+
+initPlayer : Location -> Player
+initPlayer location =
+    { 
+        location = location
+        , lastDelta = { x = 0, y = 0 }
+        , score = 0
+    }
+
 getPlayersNewLocation : Map.WallsAsArray -> Player -> Int -> Int -> Player
 getPlayersNewLocation wallsAsArray currentLocation deltaX deltaY =
         let
             newLocation = 
                 { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
-            playerWallElement =
-                Map.getWallElement wallsAsArray newLocation
+            playerWallElementType =
+                Map.getWallElementType wallsAsArray newLocation
             lastDelta =
                 if deltaX /= 0 || deltaY /= 0 then
                     { x = deltaX, y = deltaY }
                 else
                     currentLocation.lastDelta
         in
-            if playerWallElement == ' ' then
-                -- allow player to move
-                { currentLocation |
-                      location = { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
-                    , lastDelta = lastDelta
-                }
-            else
-                -- player has hit a wall, don't allow them to move
-                currentLocation
+            case playerWallElementType of
+                Map.Empty ->
+                    -- allow player to move
+                    { currentLocation |
+                        location = { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
+                        , lastDelta = lastDelta
+                    }
+                Map.Prize ->
+                -- allow player to move and increment score
+                    { currentLocation |
+                        location = { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
+                        , lastDelta = lastDelta
+                        , score = currentLocation.score + 1
+                    }
+                Map.Wall ->
+                    -- player has hit a wall, don't allow them to move
+                    currentLocation
 
 
 getPlayersArrowNewLocation : Map.WallsAsArray -> PlayerArrow -> PlayerArrow
