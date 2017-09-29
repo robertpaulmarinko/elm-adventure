@@ -29,16 +29,14 @@ initPlayer location =
 
 getPlayersNewLocation : Map.WallsAsArray -> Player -> Int -> Int -> Player
 getPlayersNewLocation wallsAsArray currentLocation deltaX deltaY =
+    if deltaX /= 0 || deltaY /= 0 then
         let
             newLocation = 
                 { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
             playerWallElementType =
                 Map.getWallElementType wallsAsArray newLocation
             lastDelta =
-                if deltaX /= 0 || deltaY /= 0 then
-                    { x = deltaX, y = deltaY }
-                else
-                    currentLocation.lastDelta
+                { x = deltaX, y = deltaY }
         in
             case playerWallElementType of
                 Map.Empty ->
@@ -57,7 +55,9 @@ getPlayersNewLocation wallsAsArray currentLocation deltaX deltaY =
                 Map.Wall ->
                     -- player has hit a wall, don't allow them to move
                     currentLocation
-
+    else
+        -- player has not moved, do nothing
+        currentLocation
 
 getPlayersArrowNewLocation : Map.WallsAsArray -> PlayerArrow -> PlayerArrow
 getPlayersArrowNewLocation wallsAsArray currentLocation =
