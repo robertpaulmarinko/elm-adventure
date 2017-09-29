@@ -22,6 +22,7 @@ import Char exposing (..)
 import Display
 import Map
 import Player
+import Treasure
 
 type Msg
     = KeyboardMsg Keyboard.Extra.Msg
@@ -37,6 +38,7 @@ type alias Model =
       , player2Arrow : Player.PlayerArrow
       , walls : Map.Walls
       , wallsAsArray : Map.WallsAsArray
+      , treasures : List Treasure.Treasure
     }
 
 
@@ -55,21 +57,21 @@ init =
      walls = [
              "##################################################################"
             ,"#                           #      #                             #"
-            ,"#        $                  # $    #                             #"
+            ,"#                           #      #                             #"
             ,"#                           #      #                             #"
             ,"#                           ###  ###                             #"
             ,"#                                                                #"
-            ,"#           $                         $                          #"
+            ,"#                                                                #"
             ,"#                   BBBBBBB                                      #"
             ,"#                   B     B                                      #"
-            ,"#                   B $                                          #"
+            ,"#                   B                                            #"
             ,"#                   B     BBBBB                                  #"
             ,"#                                                                #"
             ,"#                                                                #"
-            ,"#            $                                                   #"
             ,"#                                                                #"
             ,"#                                                                #"
-            ,"#                 $                   $                          #"
+            ,"#                                                                #"
+            ,"#                                                                #"
             ,"#                                                                #"
             ,"#                                                                #"
             ,"#                                                                #"
@@ -93,6 +95,7 @@ init =
         }
         , walls =  walls
         , wallsAsArray = Array.fromList (List.map (\x -> Array.fromList (String.toList x)) walls)
+        , treasures = [ Treasure.initTreasure { x = 4, y = 4} "$", Treasure.initTreasure { x = 6, y = 6} "$" ]
         }
      , Cmd.none
     )
@@ -116,8 +119,8 @@ update msg model =
             (
             { model
                 | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
-                , player1 = Player.getPlayersNewLocation model.wallsAsArray model.player1 arrows.x arrows.y
-                , player2 = Player.getPlayersNewLocation model.wallsAsArray model.player2 wasd.x wasd.y
+                , player1 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.player1 arrows.x arrows.y
+                , player2 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.player2 wasd.x wasd.y
             }
             , Cmd.none
             )
@@ -158,6 +161,7 @@ view model =
             , renderPlayerArrow model.player1Arrow "A"
             , renderPlayerArrow model.player2Arrow "A"
             , div [] (Display.renderWalls model.walls)
+            , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.treasures)
             , div [] (Display.renderScore { x = 10, y=25 } "2" model.player1.score)
             , div [] (Display.renderScore { x = 20, y=25 } "1" model.player2.score)
             ]
@@ -169,8 +173,6 @@ renderPlayerArrow playerArrow element =
         Display.renderSingleElement playerArrow.location element
     else
         i [] []
-
-
 
 
 -- --------------------------------------------------------

@@ -4,6 +4,7 @@ module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, 
 
 import Display exposing (Location)
 import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
+import Treasure exposing (Treasure)
 
 type alias Player =
     {   location: Display.Location
@@ -27,8 +28,8 @@ initPlayer location =
         , score = 0
     }
 
-getPlayersNewLocation : Map.WallsAsArray -> Player -> Int -> Int -> Player
-getPlayersNewLocation wallsAsArray currentLocation deltaX deltaY =
+getPlayersNewLocation : Map.WallsAsArray -> List Treasure -> Player -> Int -> Int -> Player
+getPlayersNewLocation wallsAsArray treasures currentLocation deltaX deltaY =
     if deltaX /= 0 || deltaY /= 0 then
         let
             newLocation = 
