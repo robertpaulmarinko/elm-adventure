@@ -41,15 +41,23 @@ getPlayersNewLocation wallsAsArray treasures currentLocation deltaX deltaY =
         in
             case playerWallElementType of
                 Map.Empty ->
-                    -- allow player to move
-                    { currentLocation |
-                        location = { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
-                        , lastDelta = lastDelta
-                    }
+                    if Treasure.isAnyTreasureAtLocation treasures newLocation then
+                        -- allow player to move and increment score
+                        { currentLocation |
+                            location = newLocation
+                            , lastDelta = lastDelta
+                            , score = currentLocation.score + 1
+                        }
+                    else
+                        -- allow player to move
+                        { currentLocation |
+                            location = newLocation
+                            , lastDelta = lastDelta
+                        }
                 Map.Prize ->
                 -- allow player to move and increment score
                     { currentLocation |
-                        location = { x = currentLocation.location.x + deltaX, y = currentLocation.location.y - deltaY }
+                        location = newLocation
                         , lastDelta = lastDelta
                         , score = currentLocation.score + 1
                     }
