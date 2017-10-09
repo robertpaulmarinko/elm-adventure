@@ -121,6 +121,7 @@ update msg model =
                 | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
                 , player1 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.player1 arrows.x arrows.y
                 , player2 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.player2 wasd.x wasd.y
+                , treasures = Treasure.updateTreasure model.treasures model.player1.location model.player2.location
             }
             , Cmd.none
             )
