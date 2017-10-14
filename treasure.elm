@@ -1,8 +1,9 @@
 
-module Treasure exposing (Treasure, initTreasure, isAnyTreasureAtLocation, updateTreasure)
+
+module Treasure exposing (Treasure, initTreasure, initTreasures, isAnyTreasureAtLocation, updateTreasure)
 
 import Display exposing (Location)
-
+import Tuple
 
 type alias Treasure =
     {   location: Display.Location
@@ -16,6 +17,11 @@ initTreasure location element =
         location = location
         , element = element
     }
+
+initTreasures : List (Int, Int) -> String -> List Treasure
+initTreasures points element =
+    List.map (\point -> initTreasure { x = Tuple.first point, y = Tuple.second point } element) points
+
 
 updateTreasure : List Treasure -> Location -> Location -> List Treasure
 updateTreasure treasureList player1Location player2Location =

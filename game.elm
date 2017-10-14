@@ -2,7 +2,7 @@
 --and stops player from going through walls
 -- next, shoot arrows
 
--- elm-make game7.elm --output=game.js
+-- elm-make game.elm --output=game.js
 
 -- exmaple wiht multiple messages and subscriptions
 -- https://github.com/freakingawesome/drunk-label/blob/master/src/DrunkLabel.elm
@@ -17,18 +17,20 @@ import Keyboard.Extra exposing (Key(..))
 import Array exposing (Array)
 import Time exposing (Time, second, millisecond)
 import Char exposing (..)
+import Random exposing(..)
 
 -- Modules in this project
 import Display
 import Map
 import Player
 import Treasure
+import Maybe
 
 type Msg
     = KeyboardMsg Keyboard.Extra.Msg
     | KeyPressed Char
     | MoveArrow Time
-
+    | GenerateRandomTreasureLocations (List (Int, Int))
 
 type alias Model =
     { pressedKeys : List Key
@@ -47,15 +49,16 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     let
-    {-
-        # = Wall
-        B = Brick Wall
+        {-
+            # = Wall
+            B = Brick Wall
 
-        1 = Player 1
-        2 = Player 2
-    -}
-     walls = [
-             "##################################################################"
+            1 = Player 1
+            2 = Player 2
+        -}
+        walls = 
+        [
+            "##################################################################"
             ,"#                           #      #                             #"
             ,"#                           #      #                             #"
             ,"#                           #      #                             #"
@@ -78,6 +81,16 @@ init =
             ,"#                                                                #"
             ,"##################################################################"
         ]
+
+        wallsAsArray = 
+            Array.fromList (List.map (\x -> Array.fromList (String.toList x)) walls)
+
+        wallsMaxX = 
+            Array.length (Maybe.withDefault (Array.fromList []) (Array.get 0 wallsAsArray)) - 1
+        
+        wallsMaxY = 
+            Array.length wallsAsArray - 1
+
     in
     ( { 
         pressedKeys = []
@@ -94,16 +107,22 @@ init =
             , released = False
         }
         , walls =  walls
-        , wallsAsArray = Array.fromList (List.map (\x -> Array.fromList (String.toList x)) walls)
-        , treasures = [ Treasure.initTreasure { x = 4, y = 4} "$", Treasure.initTreasure { x = 6, y = 6} "$" ]
+        , wallsAsArray = wallsAsArray
+        , treasures = [  ]
         }
-     , Cmd.none
+
+        -- generate some random points used to place reasure
+     , Random.generate GenerateRandomTreasureLocations (list 10 <| Random.pair (int 0 wallsMaxX) (int 0 wallsMaxY))
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        GenerateRandomTreasureLocations res ->
+            -- Triggered by the Random.generate statement in init
+            ( { model | treasures = Treasure.initTreasures res "$" }, Cmd.none)
+
         KeyboardMsg keyMsg ->
         let
             shiftPressed =
