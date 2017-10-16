@@ -30,6 +30,7 @@ renderSingleElement location element =
             "1" -> ("fa fa-male fa-2x fa-fw", "blue") -- player 1
             "2" -> ("fa fa-female fa-2x fa-fw", "yellow") -- player 2
             "A" -> ("fa fa-cog fa-spin fa-2x fa-fw", "red") -- player arrow
+            "M" -> ("fa fa-github-alt fa-2x fa-fw", "grey") --monster
             _ -> ("", "white")
  in
     i [ style [("position", "absolute") ,("left", left), ("top", top), ("color", color) ] , class className ] [ ] 

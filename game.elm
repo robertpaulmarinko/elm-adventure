@@ -18,19 +18,21 @@ import Array exposing (Array)
 import Time exposing (Time, second, millisecond)
 import Char exposing (..)
 import Random exposing(..)
+import Maybe
 
 -- Modules in this project
 import Display
 import Map
 import Player
 import Treasure
-import Maybe
+import Monster
 
 type Msg
     = KeyboardMsg Keyboard.Extra.Msg
     | KeyPressed Char
     | MoveArrow Time
-    | GenerateRandomTreasureLocations (List (Int, Int))
+    | MoveMonsters Time
+    | GenerateRandomLocations (List (Int, Int))
 
 type alias Model =
     { pressedKeys : List Key
@@ -41,6 +43,7 @@ type alias Model =
       , walls : Map.Walls
       , wallsAsArray : Map.WallsAsArray
       , treasures : List Treasure.Treasure
+      , monsters: List Monster.Monster
     }
 
 
@@ -109,19 +112,23 @@ init =
         , walls =  walls
         , wallsAsArray = wallsAsArray
         , treasures = [  ]
+        , monsters = [ ]
         }
 
-        -- generate some random points used to place reasure
-     , Random.generate GenerateRandomTreasureLocations (list 10 <| Random.pair (int 0 wallsMaxX) (int 0 wallsMaxY))
+        -- generate some random points used to place treasure
+     , Random.generate GenerateRandomLocations (list 15 <| Random.pair (int 1 (wallsMaxX - 1)) (int 1 (wallsMaxY - 1)))
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GenerateRandomTreasureLocations res ->
+        GenerateRandomLocations locations ->
             -- Triggered by the Random.generate statement in init
-            ( { model | treasures = Treasure.initTreasures res "$" }, Cmd.none)
+            ( { model 
+                | treasures = Treasure.initTreasures (List.take 10 locations) "$" 
+                , monsters = Monster.initMonsters (List.drop 10 locations) "M" }
+                , Cmd.none)
 
         KeyboardMsg keyMsg ->
         let
@@ -171,6 +178,11 @@ update msg model =
                  }
                 , Cmd.none 
             )
+        MoveMonsters time ->
+            (
+                { model | monsters = Monster.moveMonsters model.wallsAsArray model.monsters }
+                , Cmd.none
+            )
 
 view : Model -> Html msg
 view model =
@@ -182,6 +194,7 @@ view model =
             , renderPlayerArrow model.player2Arrow "A"
             , div [] (Display.renderWalls model.walls)
             , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.treasures)
+            , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.monsters)
             , div [] (Display.renderScore { x = 10, y=25 } "2" model.player1.score)
             , div [] (Display.renderScore { x = 20, y=25 } "1" model.player2.score)
             ]
@@ -202,9 +215,10 @@ renderPlayerArrow playerArrow element =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-    [Sub.map KeyboardMsg Keyboard.Extra.subscriptions    -- for arrow kets
+    [Sub.map KeyboardMsg Keyboard.Extra.subscriptions    -- for arrow keys
      , Keyboard.presses (\code -> KeyPressed (fromCode code))  -- for other key presses
-     ,Time.every (100 * millisecond) MoveArrow]  -- timer, to move arrows
+     ,Time.every (50 * millisecond) MoveArrow  -- timer, to move arrows
+     ,Time.every (300 * millisecond) MoveMonsters]  -- timer, to move monsters
   
 
 -- --------------------------------------------------------
@@ -220,6 +234,7 @@ main =
         , view = view
         , subscriptions = subscriptions
         }
+
 
 
 

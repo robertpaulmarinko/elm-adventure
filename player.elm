@@ -1,5 +1,3 @@
--- This module has types and functions related to the players
-
 module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, getPlayersArrowNewLocation)
 
 import Display exposing (Location)
