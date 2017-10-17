@@ -13,7 +13,9 @@ initMonster : Location -> String -> Monster
 initMonster location element =
     { 
         location = location
-        , direction = { x = 1, y = 0 }
+        -- start with monster not moving, getMonstersNewLocation will make it move
+        -- and random direction the first time
+        , direction = { x = 0, y = 0 }
         , element = element
     }
 
@@ -40,28 +42,32 @@ getMonstersNewLocation wallsAsArray currentLocationAndRandomDirection =
         wellElementType =
             Map.getWallElementType wallsAsArray newLocation
     in
-        case wellElementType of
-            Map.Empty ->
-                    -- allow monster to move
-                    { currentLocation |
-                        location = newLocation
-                    }
-            Map.Prize ->
-                    -- allow monster to move
-                    { currentLocation |
-                        location = newLocation
-                    }
-            Map.Wall ->
-                -- monster has hit a wall, change direction
-                let 
-                    x = 
-                        Tuple.first newDirection
-                    y = 
-                        Tuple.second newDirection
-                in
-                    if (x == 0 && y == 0) then
-                        -- don't let the monster standstill, instead reverse direction
-                        { currentLocation | direction = { x = currentLocation.direction.x * -1, y = currentLocation.direction.y * -1} }
-                    else
-                        -- use the random direction
-                        { currentLocation | direction = { x = x, y = y} }
+        if (currentLocation.direction.x == 0 && currentLocation.direction.y == 0) then
+            -- Monster is not moving, make them move in a random direction
+            { currentLocation | direction = { x = Tuple.first newDirection, y = Tuple.second newDirection }}
+        else
+            case wellElementType of
+                Map.Empty ->
+                        -- allow monster to move
+                        { currentLocation |
+                            location = newLocation
+                        }
+                Map.Prize ->
+                        -- allow monster to move
+                        { currentLocation |
+                            location = newLocation
+                        }
+                Map.Wall ->
+                    -- monster has hit a wall, change direction
+                    let 
+                        x = 
+                            Tuple.first newDirection
+                        y = 
+                            Tuple.second newDirection
+                    in
+                        if (x == 0 && y == 0) then
+                            -- don't let the monster standstill, instead reverse direction
+                            { currentLocation | direction = { x = currentLocation.direction.x * -1, y = currentLocation.direction.y * -1} }
+                        else
+                            -- use the random direction
+                            { currentLocation | direction = { x = x, y = y} }
