@@ -21,42 +21,47 @@ initMonsters : List (Int, Int) -> String -> List Monster
 initMonsters points element =
     List.map (\point -> initMonster { x = Tuple.first point, y = Tuple.second point } element) points
 
-moveMonsters : Map.WallsAsArray -> List Monster -> List Monster
-moveMonsters wallsAsArray monsters =
-    List.map (\monster -> getMonstersNewLocation wallsAsArray monster) monsters
+-- the length of randomDirections and monsters should be the same
+moveMonsters : Map.WallsAsArray -> List (Int, Int) -> List Monster -> List Monster
+moveMonsters wallsAsArray randomDirections monsters =
+    -- combine the monsters and randomDirections in a tuple of (monster, direction) and then pass into 
+    -- getMonstersNewLocation function
+    List.map (\monster -> getMonstersNewLocation wallsAsArray monster) <| List.map2 (,) monsters randomDirections
 
-getMonstersNewLocation : Map.WallsAsArray -> Monster -> Monster
-getMonstersNewLocation wallsAsArray currentLocation =
-    if currentLocation.direction.x /= 0 || currentLocation.direction.y /= 0 then
-        let
-            newLocation = 
-                { x = currentLocation.location.x + currentLocation.direction.x, y = currentLocation.location.y - currentLocation.direction.y }
-            wellElementType =
-                Map.getWallElementType wallsAsArray newLocation
-        in
-            case wellElementType of
-                Map.Empty ->
-                        -- allow monster to move
-                        { currentLocation |
-                            location = newLocation
-                        }
-                Map.Prize ->
-                        -- allow monster to move
-                        { currentLocation |
-                            location = newLocation
-                        }
-                Map.Wall ->
-                    -- monster has hit a wall, change direction
-                    if (currentLocation.direction.x == 1 && currentLocation.direction.y == 0) then
-                        { currentLocation | direction = { x = 0, y = 1} }
-                    else if (currentLocation.direction.x == 0 && currentLocation.direction.y == 1) then
-                        { currentLocation | direction = { x = -1, y = 0} }
-                    else if (currentLocation.direction.x == -1 && currentLocation.direction.y == 0) then
-                        { currentLocation | direction = { x = 0, y = -1} }
-                    else if (currentLocation.direction.x == 0 && currentLocation.direction.y == -1) then
-                        { currentLocation | direction = { x = 1, y = 0} }
+getMonstersNewLocation : Map.WallsAsArray -> (Monster, (Int, Int)) -> Monster
+getMonstersNewLocation wallsAsArray currentLocationAndRandomDirection =
+    let
+        currentLocation = 
+            Tuple.first currentLocationAndRandomDirection
+        newDirection =
+            Tuple.second currentLocationAndRandomDirection
+        newLocation = 
+            { x = currentLocation.location.x + currentLocation.direction.x, y = currentLocation.location.y - currentLocation.direction.y }
+        wellElementType =
+            Map.getWallElementType wallsAsArray newLocation
+    in
+        case wellElementType of
+            Map.Empty ->
+                    -- allow monster to move
+                    { currentLocation |
+                        location = newLocation
+                    }
+            Map.Prize ->
+                    -- allow monster to move
+                    { currentLocation |
+                        location = newLocation
+                    }
+            Map.Wall ->
+                -- monster has hit a wall, change direction
+                let 
+                    x = 
+                        Tuple.first newDirection
+                    y = 
+                        Tuple.second newDirection
+                in
+                    if (x == 0 && y == 0) then
+                        -- don't let the monster standstill, instead reverse direction
+                        { currentLocation | direction = { x = currentLocation.direction.x * -1, y = currentLocation.direction.y * -1} }
                     else
-                        { currentLocation | direction = { x = 0, y = 0} }
-    else
-        -- monster is not moving, do nothing
-        currentLocation
+                        -- use the random direction
+                        { currentLocation | direction = { x = x, y = y} }

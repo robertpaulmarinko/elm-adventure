@@ -33,6 +33,7 @@ type Msg
     | MoveArrow Time
     | MoveMonsters Time
     | GenerateRandomLocations (List (Int, Int))
+    | MoveMonstersWithRandomDirection (List (Int, Int))
 
 type alias Model =
     { pressedKeys : List Key
@@ -115,7 +116,7 @@ init =
         , monsters = [ ]
         }
 
-        -- generate some random points used to place treasure
+        -- generate some random points used to place treasure and monsters
      , Random.generate GenerateRandomLocations (list 15 <| Random.pair (int 1 (wallsMaxX - 1)) (int 1 (wallsMaxY - 1)))
     )
 
@@ -178,9 +179,19 @@ update msg model =
                  }
                 , Cmd.none 
             )
-        MoveMonsters time ->
+
+        MoveMonsters time ->  
+            -- called with a timer, make the monsters move
+            -- generate a new random direction for each monster.  If the monster hits a wall
+            -- then the random direction will be used.    
+            (   model
+                , Random.generate MoveMonstersWithRandomDirection (list (List.length model.monsters) <| Random.pair (int -1 1) (int -1 1))
+            )
+
+        MoveMonstersWithRandomDirection randomDirection ->
+            -- Make the monsters move, pass in the generated random directions.
             (
-                { model | monsters = Monster.moveMonsters model.wallsAsArray model.monsters }
+                { model | monsters = Monster.moveMonsters model.wallsAsArray randomDirection model.monsters }
                 , Cmd.none
             )
 
