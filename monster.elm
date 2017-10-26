@@ -1,4 +1,4 @@
-module Monster exposing (Monster, initMonsters, moveMonsters)
+module Monster exposing (Monster, initMonsters, moveMonsters, isAnyMonsterAtLocation)
 
 import Display exposing (Location)
 import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
@@ -71,3 +71,10 @@ getMonstersNewLocation wallsAsArray currentLocationAndRandomDirection =
                         else
                             -- use the random direction
                             { currentLocation | direction = { x = x, y = y} }
+
+isAnyMonsterAtLocation : List Monster -> Location -> Bool
+isAnyMonsterAtLocation monsterList playerLocation =
+    let
+        matches = List.filter (\t -> t.location.x == playerLocation.x && t.location.y == playerLocation.y) monsterList
+    in
+        List.length matches > 0

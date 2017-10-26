@@ -146,8 +146,8 @@ update msg model =
             (
             { model
                 | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
-                , player1 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.player1 arrows.x arrows.y
-                , player2 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.player2 wasd.x wasd.y
+                , player1 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.monsters model.player1 arrows.x arrows.y
+                , player2 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y
                 , treasures = Treasure.updateTreasure model.treasures model.player1.location model.player2.location
             }
             , Cmd.none
@@ -191,7 +191,11 @@ update msg model =
         MoveMonstersWithRandomDirection randomDirection ->
             -- Make the monsters move, pass in the generated random directions.
             (
-                { model | monsters = Monster.moveMonsters model.wallsAsArray randomDirection model.monsters }
+                { model | 
+                    monsters = Monster.moveMonsters model.wallsAsArray randomDirection model.monsters 
+                    ,player1 = Player.checkForMonsterCollision model.player1 model.monsters
+                    ,player2 = Player.checkForMonsterCollision model.player2 model.monsters
+                }
                 , Cmd.none
             )
 

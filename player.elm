@@ -1,8 +1,9 @@
-module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, getPlayersArrowNewLocation)
+module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, getPlayersArrowNewLocation, checkForMonsterCollision)
 
 import Display exposing (Location)
 import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
 import Treasure exposing (Treasure)
+import Monster exposing (Monster)
 
 type alias Player =
     {   location: Display.Location
@@ -26,8 +27,8 @@ initPlayer location =
         , score = 0
     }
 
-getPlayersNewLocation : Map.WallsAsArray -> List Treasure -> Player -> Int -> Int -> Player
-getPlayersNewLocation wallsAsArray treasures currentLocation deltaX deltaY =
+getPlayersNewLocation : Map.WallsAsArray -> List Treasure -> List Monster -> Player -> Int -> Int -> Player
+getPlayersNewLocation wallsAsArray treasures monsters currentLocation deltaX deltaY =
     if deltaX /= 0 || deltaY /= 0 then
         let
             newLocation = 
@@ -45,6 +46,13 @@ getPlayersNewLocation wallsAsArray treasures currentLocation deltaX deltaY =
                             location = newLocation
                             , lastDelta = lastDelta
                             , score = currentLocation.score + 1
+                        }
+                    else if Monster.isAnyMonsterAtLocation monsters newLocation then
+                        -- ran into a monster, reset score to 0
+                        { currentLocation |
+                            location = newLocation
+                            , lastDelta = lastDelta
+                            , score = 0
                         }
                     else
                         -- allow player to move
@@ -89,3 +97,13 @@ getPlayersArrowNewLocation wallsAsArray currentLocation =
                 -- arrow not moving
                 currentLocation
 
+checkForMonsterCollision : Player -> List Monster -> Player
+checkForMonsterCollision player monsters =
+    if Monster.isAnyMonsterAtLocation monsters player.location then
+        -- ran into a monster, reset score to 0
+        { player |
+            score = 0
+        }
+    else
+        -- did not run into monster
+        player
