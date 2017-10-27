@@ -26,6 +26,7 @@ import Map
 import Player
 import Treasure
 import Monster
+import CollisionChecker
 
 type Msg
     = KeyboardMsg Keyboard.Extra.Msg
@@ -176,6 +177,7 @@ update msg model =
                      model
                     | player1Arrow = Player.getPlayersArrowNewLocation model.wallsAsArray model.player1Arrow
                     , player2Arrow = Player.getPlayersArrowNewLocation model.wallsAsArray model.player2Arrow
+                    , monsters = CollisionChecker.updateMonsterList model.monsters model.player1Arrow model.player2Arrow
                  }
                 , Cmd.none 
             )

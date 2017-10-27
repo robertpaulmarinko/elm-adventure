@@ -78,3 +78,4 @@ isAnyMonsterAtLocation monsterList playerLocation =
         matches = List.filter (\t -> t.location.x == playerLocation.x && t.location.y == playerLocation.y) monsterList
     in
         List.length matches > 0
+
