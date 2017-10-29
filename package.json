@@ -1,0 +1,26 @@
+{
+  "name": "elm-adventure",
+  "version": "1.0.0",
+  "description": "Greatest Elm adventure game ever written",
+  "main": "game.html",
+  "dependencies": {
+    "elm": "^0.18.0"
+  },
+  "devDependencies": {
+    "lite-server": "^2.3.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "lite-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robertpaulmarinko/elm-adventure.git"
+  },
+  "author": "Robert Marinko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robertpaulmarinko/elm-adventure/issues"
+  },
+  "homepage": "https://github.com/robertpaulmarinko/elm-adventure#readme"
+}
