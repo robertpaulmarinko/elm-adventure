@@ -47,8 +47,8 @@ initEmptyMap =
         , wallsMaxY = 0 
     }
 
-loadMap: Map  
-loadMap =
+loadMap: Walls -> Map  
+loadMap walls = 
     let
         {-
             # = Wall
@@ -57,32 +57,6 @@ loadMap =
             1 = Player 1
             2 = Player 2
         -}
-        walls = 
-        [
-            "##################################################################"
-            ,"#                           #      #                             #"
-            ,"#                           #      #                             #"
-            ,"#                           #      #                             #"
-            ,"#                           ###  ###                             #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                   BBBBBBB                                      #"
-            ,"#                   B     B                                      #"
-            ,"#                   B                                            #"
-            ,"#                   B     BBBBB                                  #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"##################################################################"
-        ]
-
         wallsAsArray = 
             Array.fromList (List.map (\x -> Array.fromList (String.toList x)) walls)
 

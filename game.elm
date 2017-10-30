@@ -15,11 +15,11 @@ import Html exposing (Html, div, p, ul, li, text, map, i, button)
 import Html.Events exposing (onClick)
 import Keyboard exposing (..)
 import Keyboard.Extra exposing (Key(..))
-import Array exposing (Array)
 import Time exposing (Time, second, millisecond)
 import Char exposing (..)
 import Random exposing(..)
-import Maybe
+import Http exposing(..)
+import Json.Decode as Decode
 
 -- Modules in this project
 import Display
@@ -37,6 +37,7 @@ type Msg
     | MoveMonsters Time
     | GenerateRandomLocations (List (Int, Int))
     | MoveMonstersWithRandomDirection (List (Int, Int))
+    | MapLoaded  (Result Http.Error (List String))
 
 
 type alias Model =
@@ -52,8 +53,10 @@ type alias Model =
     }
 
 
-
-
+-- --------------------------------------------------------
+-- init
+-- runs when the page first loads
+-- --------------------------------------------------------
 init : ( Model, Cmd Msg )
 init =
     ( { 
@@ -78,13 +81,26 @@ init =
      , Cmd.none
     )
 
+-- --------------------------------------------------------
+-- update
+-- runs whenever an event occurs, updates the mode
+-- based on the event
+-- --------------------------------------------------------
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         StartGame ->
+            ( 
+                model
+                -- make a HTTP call to get the map
+                , loadMap "entrance"
+            )
+
+        -- called after map has been loaded using HTTP request
+        MapLoaded (Ok walls) ->
             let
-                map = Map.loadMap
+                map = Map.loadMap walls
             in
                 ( 
                     {model  
@@ -92,15 +108,21 @@ update msg model =
                         , gameStarted = True
                     }
                     -- generate some random points used to place treasure and monsters
-                    , Random.generate GenerateRandomLocations (list 15 <| Random.pair (int 1 (map.wallsMaxX - 1)) (int 1 (map.wallsMaxY - 1)))
+                    , Random.generate GenerateRandomLocations (Random.list 15 <| Random.pair (Random.int 1 (map.wallsMaxX - 1)) (Random.int 1 (map.wallsMaxY - 1)))
                 )
 
+
+        MapLoaded (Err _) ->
+            -- TODO - should add something here to handle errors
+            (model, Cmd.none)
+
         GenerateRandomLocations locations ->
-            -- Triggered by the Random.generate statement in init
+            -- Triggered by the Random.generate statement in MapLoaded
             ( { model 
                 | treasures = Treasure.initTreasures (List.take 10 locations) "$" 
                 , monsters = Monster.initMonsters (List.drop 10 locations) "M" }
                 , Cmd.none)
+
 
         KeyboardMsg keyMsg ->
         let
@@ -157,7 +179,7 @@ update msg model =
             -- generate a new random direction for each monster.  If the monster hits a wall
             -- then the random direction will be used.    
             (   model
-                , Random.generate MoveMonstersWithRandomDirection (list (List.length model.monsters) <| Random.pair (int -1 1) (int -1 1))
+                , Random.generate MoveMonstersWithRandomDirection (Random.list (List.length model.monsters) <| Random.pair (Random.int -1 1) (Random.int -1 1))
             )
 
         MoveMonstersWithRandomDirection randomDirection ->
@@ -171,6 +193,28 @@ update msg model =
                 , Cmd.none
             )
 
+-- make a HTTP request to load a map
+loadMap : String -> Cmd Msg
+loadMap mapName =
+  let
+    url =
+      "/maps/" ++ mapName ++ ".json"
+
+    request =
+      Http.get url decodeMapJson
+  in
+    Http.send MapLoaded request
+
+-- called after the HTTP get request is finished, decodes
+-- the JSON that was retrived.
+decodeMapJson : Decode.Decoder (List String)
+decodeMapJson =
+  Decode.at ["walls"] (Decode.list Decode.string)
+
+-- --------------------------------------------------------
+-- view
+-- --------------------------------------------------------
+  
 view : Model -> Html Msg
 view model =
     if model.gameStarted then
