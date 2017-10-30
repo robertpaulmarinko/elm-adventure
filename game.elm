@@ -11,7 +11,8 @@ module Main exposing (..)
 
 
 -- 3rd party modules
-import Html exposing (Html, div, p, ul, li, text, map, i)
+import Html exposing (Html, div, p, ul, li, text, map, i, button)
+import Html.Events exposing (onClick)
 import Keyboard exposing (..)
 import Keyboard.Extra exposing (Key(..))
 import Array exposing (Array)
@@ -28,13 +29,15 @@ import Treasure
 import Monster
 import CollisionChecker
 
-type Msg
-    = KeyboardMsg Keyboard.Extra.Msg
+type Msg 
+    = StartGame
+    | KeyboardMsg Keyboard.Extra.Msg
     | KeyPressed Char
     | MoveArrow Time
     | MoveMonsters Time
     | GenerateRandomLocations (List (Int, Int))
     | MoveMonstersWithRandomDirection (List (Int, Int))
+
 
 type alias Model =
     { pressedKeys : List Key
@@ -42,10 +45,10 @@ type alias Model =
       , player2 : Player.Player
       , player1Arrow : Player.PlayerArrow
       , player2Arrow : Player.PlayerArrow
-      , walls : Map.Walls
-      , wallsAsArray : Map.WallsAsArray
+      , map : Map.Map
       , treasures : List Treasure.Treasure
       , monsters: List Monster.Monster
+      , gameStarted: Bool
     }
 
 
@@ -53,50 +56,6 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    let
-        {-
-            # = Wall
-            B = Brick Wall
-
-            1 = Player 1
-            2 = Player 2
-        -}
-        walls = 
-        [
-            "##################################################################"
-            ,"#                           #      #                             #"
-            ,"#                           #      #                             #"
-            ,"#                           #      #                             #"
-            ,"#                           ###  ###                             #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                   BBBBBBB                                      #"
-            ,"#                   B     B                                      #"
-            ,"#                   B                                            #"
-            ,"#                   B     BBBBB                                  #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"#                                                                #"
-            ,"##################################################################"
-        ]
-
-        wallsAsArray = 
-            Array.fromList (List.map (\x -> Array.fromList (String.toList x)) walls)
-
-        wallsMaxX = 
-            Array.length (Maybe.withDefault (Array.fromList []) (Array.get 0 wallsAsArray)) - 1
-        
-        wallsMaxY = 
-            Array.length wallsAsArray - 1
-
-    in
     ( { 
         pressedKeys = []
         , player1 = Player.initPlayer { x = 2, y = 2 }
@@ -111,20 +70,31 @@ init =
             , direction = { x = 0, y = 0 }
             , released = False
         }
-        , walls =  walls
-        , wallsAsArray = wallsAsArray
+        , map = Map.initEmptyMap
         , treasures = [  ]
         , monsters = [ ]
+        , gameStarted = False
         }
-
-        -- generate some random points used to place treasure and monsters
-     , Random.generate GenerateRandomLocations (list 15 <| Random.pair (int 1 (wallsMaxX - 1)) (int 1 (wallsMaxY - 1)))
+     , Cmd.none
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        StartGame ->
+            let
+                map = Map.loadMap
+            in
+                ( 
+                    {model  
+                        | map = map
+                        , gameStarted = True
+                    }
+                    -- generate some random points used to place treasure and monsters
+                    , Random.generate GenerateRandomLocations (list 15 <| Random.pair (int 1 (map.wallsMaxX - 1)) (int 1 (map.wallsMaxY - 1)))
+                )
+
         GenerateRandomLocations locations ->
             -- Triggered by the Random.generate statement in init
             ( { model 
@@ -147,8 +117,8 @@ update msg model =
             (
             { model
                 | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
-                , player1 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.monsters model.player1 arrows.x arrows.y
-                , player2 = Player.getPlayersNewLocation model.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y
+                , player1 = Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player1 arrows.x arrows.y
+                , player2 = Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y
                 , treasures = Treasure.updateTreasure model.treasures model.player1.location model.player2.location
             }
             , Cmd.none
@@ -175,8 +145,8 @@ update msg model =
             ( 
                  {
                      model
-                    | player1Arrow = Player.getPlayersArrowNewLocation model.wallsAsArray model.player1Arrow
-                    , player2Arrow = Player.getPlayersArrowNewLocation model.wallsAsArray model.player2Arrow
+                    | player1Arrow = Player.getPlayersArrowNewLocation model.map.wallsAsArray model.player1Arrow
+                    , player2Arrow = Player.getPlayersArrowNewLocation model.map.wallsAsArray model.player2Arrow
                     , monsters = CollisionChecker.updateMonsterList model.monsters model.player1Arrow model.player2Arrow
                  }
                 , Cmd.none 
@@ -194,28 +164,33 @@ update msg model =
             -- Make the monsters move, pass in the generated random directions.
             (
                 { model | 
-                    monsters = Monster.moveMonsters model.wallsAsArray randomDirection model.monsters 
+                    monsters = Monster.moveMonsters model.map.wallsAsArray randomDirection model.monsters 
                     ,player1 = Player.checkForMonsterCollision model.player1 model.monsters
                     ,player2 = Player.checkForMonsterCollision model.player2 model.monsters
                 }
                 , Cmd.none
             )
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
+    if model.gameStarted then
         div []
-            [
-              Display.renderSingleElement model.player1.location "2"
+            [ 
+             Display.renderSingleElement model.player1.location "2"
             , Display.renderSingleElement model.player2.location "1"
             , renderPlayerArrow model.player1Arrow "A"
             , renderPlayerArrow model.player2Arrow "A"
-            , div [] (Display.renderWalls model.walls)
+            , div [] (Display.renderWalls model.map.walls)
             , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.treasures)
             , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.monsters)
             , div [] (Display.renderScore { x = 10, y=25 } "2" model.player1.score)
             , div [] (Display.renderScore { x = 20, y=25 } "1" model.player2.score)
             ]
-
+    else
+        div []
+            [ button [ onClick StartGame ] [ text "Start Game" ]
+            ]
+    
 
 renderPlayerArrow : Player.PlayerArrow -> String -> Html msg
 renderPlayerArrow playerArrow element =
