@@ -19,7 +19,7 @@ import Time exposing (Time, second, millisecond)
 import Char exposing (..)
 import Random exposing(..)
 import Http exposing(..)
-import Json.Decode as Decode
+import Json.Decode exposing (..)
 
 -- Modules in this project
 import Display
@@ -37,7 +37,7 @@ type Msg
     | MoveMonsters Time
     | GenerateRandomLocations (List (Int, Int))
     | MoveMonstersWithRandomDirection (List (Int, Int))
-    | MapLoaded  (Result Http.Error (List String))
+    | MapLoaded  (Result Http.Error Map.MapJson)
 
 
 type alias Model =
@@ -98,9 +98,9 @@ update msg model =
             )
 
         -- called after map has been loaded using HTTP request
-        MapLoaded (Ok walls) ->
+        MapLoaded (Ok mapJson) ->
             let
-                map = Map.loadMap walls
+                map = Map.loadMap mapJson
             in
                 ( 
                     {model  
@@ -207,9 +207,11 @@ loadMap mapName =
 
 -- called after the HTTP get request is finished, decodes
 -- the JSON that was retrived.
-decodeMapJson : Decode.Decoder (List String)
+decodeMapJson : Decoder Map.MapJson
 decodeMapJson =
-  Decode.at ["walls"] (Decode.list Decode.string)
+  Json.Decode.map2 Map.MapJson
+    (field "walls" (Json.Decode.list Json.Decode.string))
+    (field "doors" (Json.Decode.list Json.Decode.string))
 
 -- --------------------------------------------------------
 -- view
