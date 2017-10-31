@@ -59,18 +59,11 @@ getMonstersNewLocation wallsAsArray currentLocationAndRandomDirection =
                         }
                 Map.Wall ->
                     -- monster has hit a wall, change direction
-                    let 
-                        x = 
-                            Tuple.first newDirection
-                        y = 
-                            Tuple.second newDirection
-                    in
-                        if (x == 0 && y == 0) then
-                            -- don't let the monster standstill, instead reverse direction
-                            { currentLocation | direction = { x = currentLocation.direction.x * -1, y = currentLocation.direction.y * -1} }
-                        else
-                            -- use the random direction
-                            { currentLocation | direction = { x = x, y = y} }
+                    changeDirection newDirection currentLocation
+
+                Map.Door ->
+                    -- monster has hit a door, change direction
+                    changeDirection newDirection currentLocation
 
 isAnyMonsterAtLocation : List Monster -> Location -> Bool
 isAnyMonsterAtLocation monsterList playerLocation =
@@ -79,3 +72,18 @@ isAnyMonsterAtLocation monsterList playerLocation =
     in
         List.length matches > 0
 
+-- make the monster move in a new direction
+changeDirection : (Int, Int) -> Monster -> Monster
+changeDirection newDirection currentLocation =
+    let 
+        x = 
+            Tuple.first newDirection
+        y = 
+            Tuple.second newDirection
+    in
+        if (x == 0 && y == 0) then
+            -- don't let the monster standstill, instead reverse direction
+            { currentLocation | direction = { x = currentLocation.direction.x * -1, y = currentLocation.direction.y * -1} }
+        else
+            -- use the random direction
+            { currentLocation | direction = { x = x, y = y} }

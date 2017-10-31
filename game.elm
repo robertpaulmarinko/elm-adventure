@@ -142,6 +142,7 @@ update msg model =
                 , player1 = Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player1 arrows.x arrows.y
                 , player2 = Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y
                 , treasures = Treasure.updateTreasure model.treasures model.player1.location model.player2.location
+                -- TODO - reload map if player entered a door
             }
             , Cmd.none
             )
@@ -222,8 +223,8 @@ view model =
     if model.gameStarted then
         div []
             [ 
-             Display.renderSingleElement model.player1.location "2"
-            , Display.renderSingleElement model.player2.location "1"
+             Display.renderSingleElement model.player1.location "Player2"
+            , Display.renderSingleElement model.player2.location "Player1"
             , renderPlayerArrow model.player1Arrow "A"
             , renderPlayerArrow model.player2Arrow "A"
             , div [] (Display.renderWalls model.map.walls)

@@ -70,6 +70,14 @@ getPlayersNewLocation wallsAsArray treasures monsters currentLocation deltaX del
                 Map.Wall ->
                     -- player has hit a wall, don't allow them to move
                     currentLocation
+
+                Map.Door ->
+                    -- allow player to move
+                    { currentLocation |
+                        location = newLocation
+                        , lastDelta = lastDelta
+                    }
+                
     else
         -- player has not moved, do nothing
         currentLocation

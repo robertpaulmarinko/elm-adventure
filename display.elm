@@ -27,10 +27,12 @@ renderSingleElement location element =
             "#" -> ("fa fa-square fa-2x fa-fw", "brown") -- wall
             "B" -> ("fa fa-th-large fa-2x fa-fw", "grey") -- wall
             "$" -> ("fa fa-star fa-2x fa-fw", "green") -- prize
-            "1" -> ("fa fa-male fa-2x fa-fw", "blue") -- player 1
-            "2" -> ("fa fa-female fa-2x fa-fw", "yellow") -- player 2
+            "Player1" -> ("fa fa-male fa-2x fa-fw", "blue") -- player 1
+            "Player2" -> ("fa fa-female fa-2x fa-fw", "yellow") -- player 2
             "A" -> ("fa fa-cog fa-spin fa-2x fa-fw", "red") -- player arrow
             "M" -> ("fa fa-github-alt fa-2x fa-fw", "grey") --monster
+            "0" -> ("fa fa-toggle-up fa-2x fa-fw", "grey") -- door
+            "1" -> ("fa fa-toggle-up fa-2x fa-fw", "grey") -- door
             _ -> ("", "white")
  in
     i [ style [("position", "absolute") ,("left", left), ("top", top), ("color", color) ] , class className ] [ ] 

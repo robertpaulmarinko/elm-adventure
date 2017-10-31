@@ -23,7 +23,7 @@ type alias MapJson = {
     walls: Walls
     , doors: Doors
 }
-type ElementType = Empty | Wall | Prize
+type ElementType = Empty | Wall | Prize | Door
 
 getWallElement : WallsAsArray -> Display.Location -> Char
 getWallElement wallsAsArray location =
@@ -42,6 +42,16 @@ getWallElementType wallsAsArray location =
     case getWallElement wallsAsArray location of
         ' ' -> Empty
         '$' -> Prize
+        '0' -> Door
+        '1' -> Door
+        '2' -> Door
+        '3' -> Door
+        '4' -> Door
+        '5' -> Door
+        '6' -> Door
+        '7' -> Door
+        '8' -> Door
+        '9' -> Door
         _ ->   Wall
 
 initEmptyMap: Map
