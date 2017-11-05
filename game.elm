@@ -20,6 +20,7 @@ import Char exposing (..)
 import Random exposing(..)
 import Http exposing(..)
 import Json.Decode exposing (..)
+import Array exposing (Array)
 
 -- Modules in this project
 import Display
@@ -135,16 +136,23 @@ update msg model =
             wasd =
                 Keyboard.Extra.wasd model.pressedKeys
 
+            player1 = 
+                Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player1 arrows.x arrows.y
+
+            player2 = 
+                Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y                
+
+            treasures = 
+                Treasure.updateTreasure model.treasures player1.location player2.location                
         in
             (
             { model
                 | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
-                , player1 = Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player1 arrows.x arrows.y
-                , player2 = Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y
-                , treasures = Treasure.updateTreasure model.treasures model.player1.location model.player2.location
-                -- TODO - reload map if player entered a door
+                , player1 = player1
+                , player2 = player2
+                , treasures = treasures
             }
-            , Cmd.none
+            , checkIfPlayerEnteredNewMap model.map player1
             )
         KeyPressed char ->
             if char == ' ' then
@@ -214,6 +222,30 @@ decodeMapJson =
     (field "walls" (Json.Decode.list Json.Decode.string))
     (field "doors" (Json.Decode.list Json.Decode.string))
 
+
+-- If the player has entered a door, then load the map for the new room
+checkIfPlayerEnteredNewMap : Map.Map -> Player.Player -> Cmd Msg
+checkIfPlayerEnteredNewMap map player1 =
+    let
+        player1WallElementType =
+            Map.getWallElementType map.wallsAsArray player1.location
+        player1WellElement = 
+            Map.getWallElement map.wallsAsArray player1.location
+
+    in
+        if player1WallElementType ==  Map.Door then
+            case String.toInt (String.fromChar player1WellElement) of
+                Err msg ->
+                    Cmd.none
+                Ok mapIndex ->
+                    case Array.get mapIndex map.doors of
+                        Nothing ->
+                            Cmd.none
+                        Just val ->
+                            loadMap val
+        else
+            Cmd.none
+
 -- --------------------------------------------------------
 -- view
 -- --------------------------------------------------------
@@ -230,8 +262,8 @@ view model =
             , div [] (Display.renderWalls model.map.walls)
             , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.treasures)
             , div [] (List.map (\x -> Display.renderSingleElement x.location x.element) model.monsters)
-            , div [] (Display.renderScore { x = 10, y=25 } "2" model.player1.score)
-            , div [] (Display.renderScore { x = 20, y=25 } "1" model.player2.score)
+            , div [] (Display.renderScore { x = 10, y=25 } "Player2" model.player1.score)
+            , div [] (Display.renderScore { x = 20, y=25 } "Player1" model.player2.score)
             ]
     else
         div []

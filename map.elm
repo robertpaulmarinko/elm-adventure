@@ -9,7 +9,7 @@ import Display exposing (Location)
 
 type alias Walls = List String
 type alias WallsAsArray = Array (Array Char)
-type alias Doors = List String
+type alias Doors = Array String
 
 type alias Map = {
     walls: Walls
@@ -21,7 +21,7 @@ type alias Map = {
 
 type alias MapJson = {
     walls: Walls
-    , doors: Doors
+    , doors: List String
 }
 type ElementType = Empty | Wall | Prize | Door
 
@@ -61,7 +61,7 @@ initEmptyMap =
         ,  wallsAsArray = Array.fromList []
         , wallsMaxX = 0
         , wallsMaxY = 0 
-        , doors = []
+        , doors = Array.fromList []
     }
 
 loadMap: MapJson -> Map  
@@ -89,5 +89,5 @@ loadMap mapJson =
             , wallsAsArray = wallsAsArray
             , wallsMaxX = wallsMaxX
             , wallsMaxY = wallsMaxY
-            , doors = mapJson.doors
+            , doors = Array.fromList mapJson.doors
         }
