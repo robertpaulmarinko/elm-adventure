@@ -210,18 +210,9 @@ loadMap mapName =
       "/maps/" ++ mapName ++ ".json"
 
     request =
-      Http.get url decodeMapJson
+      Http.get url Map.decodeMapJson
   in
     Http.send MapLoaded request
-
--- called after the HTTP get request is finished, decodes
--- the JSON that was retrived.
-decodeMapJson : Decoder Map.MapJson
-decodeMapJson =
-  Json.Decode.map2 Map.MapJson
-    (field "walls" (Json.Decode.list Json.Decode.string))
-    (field "doors" (Json.Decode.list Json.Decode.string))
-
 
 -- If the player has entered a door, then load the map for the new room
 checkIfPlayerEnteredNewMap : Map.Map -> Player.Player -> Cmd Msg
@@ -241,8 +232,8 @@ checkIfPlayerEnteredNewMap map player1 =
                     case Array.get mapIndex map.doors of
                         Nothing ->
                             Cmd.none
-                        Just val ->
-                            loadMap val
+                        Just door ->
+                            loadMap door.name
         else
             Cmd.none
 

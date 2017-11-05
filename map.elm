@@ -1,28 +1,30 @@
 -- This module contains types and functions related to all static elements such as
 -- walls, prizes, etc.
 
-module Map exposing (Walls, Doors, WallsAsArray, Map, MapJson, ElementType(..), getWallElement, getWallElementType, initEmptyMap, loadMap )
+module Map exposing (Walls, WallsAsArray, Map, MapJson, DoorData, ElementType(..), getWallElement, getWallElementType, initEmptyMap, loadMap, decodeMapJson )
 
 import Array exposing (Array)
+import Json.Decode exposing (..)
 
 import Display exposing (Location)
 
 type alias Walls = List String
 type alias WallsAsArray = Array (Array Char)
-type alias Doors = Array String
+
+type alias DoorData = {
+    name: String
+    , playerStartX: Int
+    , playerStartY: Int
+}
 
 type alias Map = {
     walls: Walls
     , wallsAsArray: WallsAsArray
     , wallsMaxX: Int
     , wallsMaxY: Int
-    , doors: Doors
+    , doors: Array DoorData
 }
 
-type alias MapJson = {
-    walls: Walls
-    , doors: List String
-}
 type ElementType = Empty | Wall | Prize | Door
 
 getWallElement : WallsAsArray -> Display.Location -> Char
@@ -91,3 +93,28 @@ loadMap mapJson =
             , wallsMaxY = wallsMaxY
             , doors = Array.fromList mapJson.doors
         }
+
+
+
+-- --------------------------------------------------------
+-- These functions are used to decode the map JSON files
+-- --------------------------------------------------------
+type alias MapJson = {
+    walls: Walls
+    , doors: List DoorData
+}
+
+doorDataDecoder : Decoder DoorData
+doorDataDecoder =
+    Json.Decode.map3 DoorData
+        (field "name" string)
+        (field "playerStartX" int)
+        (field "playerStartY" int)
+
+-- called after the HTTP get request is finished, decodes
+-- the JSON that was retrived.
+decodeMapJson : Decoder MapJson
+decodeMapJson =
+  Json.Decode.map2 MapJson
+    (field "walls" (Json.Decode.list Json.Decode.string))
+    (field "doors" (Json.Decode.list doorDataDecoder))

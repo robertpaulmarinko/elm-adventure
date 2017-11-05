@@ -24,5 +24,16 @@
         ,"#                                                                #"
         ,"##################################################################"
     ]
-    , "doors" : ["front-hall-left", "front-hall-right"]
+    , "doors" : [
+        {
+            "name": "front-hall-left"
+            , "playerStartX": 1
+            , "playerStartY": 10
+        }, 
+        {
+            "name": "front-hall-right"
+            , "playerStartX": 70
+            , "playerStartY": 10
+        }
+        ]
 }
