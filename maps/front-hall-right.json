@@ -1,5 +1,6 @@
 {
-    "walls": 
+    "name": "front-hall-right"
+    ,"walls": 
     [
         "##################################################################"
         ,"#                                                                #"
@@ -28,7 +29,7 @@
         {
             "name": "entrance"
             , "playerStartX": 1
-            , "playerStartY": 10
+            , "playerStartY": 9
         }]
 
 }

@@ -1,9 +1,12 @@
-module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, getPlayersArrowNewLocation, checkForMonsterCollision)
+module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, getPlayersArrowNewLocation, checkForMonsterCollision, getPlayerPositionAfterEnteringRoom)
 
 import Display exposing (Location)
 import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
 import Treasure exposing (Treasure)
 import Monster exposing (Monster)
+
+import Array exposing (Array)
+import Debug
 
 type alias Player =
     {   location: Display.Location
@@ -115,3 +118,21 @@ checkForMonsterCollision player monsters =
     else
         -- did not run into monster
         player
+
+getPlayerPositionAfterEnteringRoom : Player -> Map.Map -> String -> Player
+getPlayerPositionAfterEnteringRoom player map previousRoom =
+        let
+            -- Find the door data from door the player just went through
+            matchingDoors = 
+                Array.filter (\door -> door.name == previousRoom) map.doors
+            -- Should only return a single door, so pull it out
+            matchingDoor = 
+                Maybe.withDefault { name = "", playerStartX = 5, playerStartY = 5} (Array.get 0 matchingDoors)
+            -- grab the players new location from the door data
+            newLocation =
+                { x = matchingDoor.playerStartX, y = matchingDoor.playerStartY }
+        in
+            {
+                player |
+                    location = newLocation
+            }

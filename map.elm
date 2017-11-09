@@ -18,7 +18,8 @@ type alias DoorData = {
 }
 
 type alias Map = {
-    walls: Walls
+    name: String
+    , walls: Walls
     , wallsAsArray: WallsAsArray
     , wallsMaxX: Int
     , wallsMaxY: Int
@@ -59,7 +60,8 @@ getWallElementType wallsAsArray location =
 initEmptyMap: Map
 initEmptyMap =
     { 
-        walls = []
+        name = ""
+        , walls = []
         ,  wallsAsArray = Array.fromList []
         , wallsMaxX = 0
         , wallsMaxY = 0 
@@ -87,20 +89,20 @@ loadMap mapJson =
 
     in
         { 
-            walls = mapJson.walls
+            name = mapJson.name
+            , walls = mapJson.walls
             , wallsAsArray = wallsAsArray
             , wallsMaxX = wallsMaxX
             , wallsMaxY = wallsMaxY
             , doors = Array.fromList mapJson.doors
         }
 
-
-
 -- --------------------------------------------------------
 -- These functions are used to decode the map JSON files
 -- --------------------------------------------------------
 type alias MapJson = {
-    walls: Walls
+    name: String
+    , walls: Walls
     , doors: List DoorData
 }
 
@@ -115,6 +117,7 @@ doorDataDecoder =
 -- the JSON that was retrived.
 decodeMapJson : Decoder MapJson
 decodeMapJson =
-  Json.Decode.map2 MapJson
+  Json.Decode.map3 MapJson
+    (field "name" (Json.Decode.string))
     (field "walls" (Json.Decode.list Json.Decode.string))
     (field "doors" (Json.Decode.list doorDataDecoder))

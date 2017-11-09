@@ -102,11 +102,14 @@ update msg model =
         MapLoaded (Ok mapJson) ->
             let
                 map = Map.loadMap mapJson
+                previousMapName = model.map.name
             in
                 ( 
                     {model  
                         | map = map
                         , gameStarted = True
+                        , player1 = Player.getPlayerPositionAfterEnteringRoom model.player1 map previousMapName
+                        , player2 = Player.getPlayerPositionAfterEnteringRoom model.player2 map previousMapName
                     }
                     -- generate some random points used to place treasure and monsters
                     , Random.generate GenerateRandomLocations (Random.list 15 <| Random.pair (Random.int 1 (map.wallsMaxX - 1)) (Random.int 1 (map.wallsMaxY - 1)))
@@ -236,6 +239,7 @@ checkIfPlayerEnteredNewMap map player1 =
                             loadMap door.name
         else
             Cmd.none
+
 
 -- --------------------------------------------------------
 -- view
