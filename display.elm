@@ -2,15 +2,15 @@
 
 module Display exposing (Location, renderSingleElement, renderString, renderWalls, renderScore)
 
-import Html exposing (Html, div, p, ul, li, text, map, i)
-import Html.Attributes exposing ( style, class )
+import Html exposing (Html, div, p, ul, li, text, map, i, img)
+import Html.Attributes exposing ( style, class, src )
 
 type alias Location =
     { x: Int
     , y : Int}
 
 elementSize: Int
-elementSize = 24
+elementSize = 30
 
 -- renders a single element to the screen
 renderSingleElement : Location -> String -> Html msg
@@ -22,20 +22,23 @@ renderSingleElement location element =
     top = 
       toString (location.y * elementSize) ++ "px" 
 
-    (className, color) = 
+    (className, imageSource) = 
         case element of
-            "#" -> ("fa fa-square fa-2x fa-fw", "brown") -- wall
-            "B" -> ("fa fa-th-large fa-2x fa-fw", "grey") -- wall
-            "$" -> ("fa fa-star fa-2x fa-fw", "green") -- prize
-            "Player1" -> ("fa fa-male fa-2x fa-fw", "blue") -- player 1
-            "Player2" -> ("fa fa-female fa-2x fa-fw", "yellow") -- player 2
-            "A" -> ("fa fa-cog fa-spin fa-2x fa-fw", "red") -- player arrow
-            "M" -> ("fa fa-github-alt fa-2x fa-fw", "grey") --monster
-            "0" -> ("fa fa-toggle-up fa-2x fa-fw", "grey") -- door
-            "1" -> ("fa fa-toggle-up fa-2x fa-fw", "grey") -- door
-            _ -> ("", "white")
+            "#" -> ("icon", "brick-wall-grey-brown") -- wall
+            "B" -> ("icon", "stone-wall-brown-grey") -- wall
+            "$" -> ("icon", "crown-coin-gold") -- prize
+            "Player1" -> ("icon", "swordman-blue") -- player 1
+            "Player2" -> ("icon", "swordwoman-yellow") -- player 2
+            "A" -> ("icon", "sharp-shuriken-purple") -- player arrow
+            "M" -> ("icon", "invisible-face-red") --monster
+            "0" -> ("icon", "wooden-door-grey-blue") -- door
+            "1" -> ("icon", "wooden-door-grey-blue") -- door
+            _ -> ("", "")
  in
-    i [ style [("position", "absolute") ,("left", left), ("top", top), ("color", color) ] , class className ] [ ] 
+    if imageSource /= "" then
+        img [ style [("position", "absolute") ,("left", left), ("top", top) ] , class className, src ("/images/" ++ imageSource ++ ".svg") ] [ ] 
+    else
+        div [] []
 
 renderString : Location -> String -> String -> String -> Html msg
 renderString location string className color =
