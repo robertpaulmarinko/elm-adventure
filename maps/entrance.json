@@ -33,7 +33,7 @@
         } 
         , {
             "name": "front-hall-right"
-            , "playerStartX": 67
+            , "playerStartX": 61
             , "playerStartY": 9
         }
     ]

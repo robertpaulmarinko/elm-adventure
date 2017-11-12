@@ -19,7 +19,6 @@ import Time exposing (Time, second, millisecond)
 import Char exposing (..)
 import Random exposing(..)
 import Http exposing(..)
-import Json.Decode exposing (..)
 import Array exposing (Array)
 
 -- Modules in this project
@@ -48,6 +47,7 @@ type alias Model =
       , player1Arrow : Player.PlayerArrow
       , player2Arrow : Player.PlayerArrow
       , map : Map.Map
+      , maps : List Map.Map
       , treasures : List Treasure.Treasure
       , monsters: List Monster.Monster
       , gameStarted: Bool
@@ -75,6 +75,7 @@ init =
             , released = False
         }
         , map = Map.initEmptyMap
+        , maps =  [ ]
         , treasures = [  ]
         , monsters = [ ]
         , gameStarted = False
@@ -93,12 +94,15 @@ update msg model =
     case msg of
         StartGame ->
             ( 
-                model
+                {model 
+                    | gameStarted = True
+                }
                 -- make a HTTP call to get the map
-                , loadMap "entrance"
+                , loadMapFromServer "entrance"
             )
 
         -- called after map has been loaded using HTTP request
+        -- only called the 'first' time a map is loaded
         MapLoaded (Ok mapJson) ->
             let
                 map = Map.loadMap mapJson
@@ -107,7 +111,7 @@ update msg model =
                 ( 
                     {model  
                         | map = map
-                        , gameStarted = True
+                        , maps = map :: model.maps -- save map so it can be loaded later
                         , player1 = Player.getPlayerPositionAfterEnteringRoom model.player1 map previousMapName
                         , player2 = Player.getPlayerPositionAfterEnteringRoom model.player2 map previousMapName
                     }
@@ -146,17 +150,25 @@ update msg model =
                 Player.getPlayersNewLocation model.map.wallsAsArray model.treasures model.monsters model.player2 wasd.x wasd.y                
 
             treasures = 
-                Treasure.updateTreasure model.treasures player1.location player2.location                
+                Treasure.updateTreasure model.treasures player1.location player2.location
+
+            doorStatus =
+                didPlayerEnteredNewMap model.map player1 
         in
-            (
-            { model
-                | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
-                , player1 = player1
-                , player2 = player2
-                , treasures = treasures
-            }
-            , checkIfPlayerEnteredNewMap model.map player1
-            )
+            if doorStatus.isPlayerInDoor == True then
+                -- player entered a new map, so load that map
+                changeMap doorStatus.mapName model
+            else
+                -- player not in door, stay in same map and move the player
+                (
+                { model
+                    | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys
+                    , player1 = player1
+                    , player2 = player2
+                    , treasures = treasures
+                }
+                , Cmd.none
+                )
         KeyPressed char ->
             if char == ' ' then
                 (
@@ -205,21 +217,30 @@ update msg model =
                 , Cmd.none
             )
 
+-- --------------------------------------------------------
+-- map related functions
+-- --------------------------------------------------------
+
 -- make a HTTP request to load a map
-loadMap : String -> Cmd Msg
-loadMap mapName =
-  let
-    url =
-      "/maps/" ++ mapName ++ ".json"
+loadMapFromServer : String -> Cmd Msg
+loadMapFromServer mapName =
+    let
+        url =
+        "/maps/" ++ mapName ++ ".json"
 
-    request =
-      Http.get url Map.decodeMapJson
-  in
-    Http.send MapLoaded request
+        request =
+            Http.get url Map.decodeMapJson
+    in
+        Http.send MapLoaded request
 
--- If the player has entered a door, then load the map for the new room
-checkIfPlayerEnteredNewMap : Map.Map -> Player.Player -> Cmd Msg
-checkIfPlayerEnteredNewMap map player1 =
+
+-- check if player entered a door, and if they did, what new map should be loaded
+type alias DidPlayerEnteredNewMapReturn = {
+    isPlayerInDoor: Bool
+    , mapName: String
+}
+didPlayerEnteredNewMap : Map.Map -> Player.Player -> DidPlayerEnteredNewMapReturn
+didPlayerEnteredNewMap map player1 =
     let
         player1WallElementType =
             Map.getWallElementType map.wallsAsArray player1.location
@@ -230,15 +251,59 @@ checkIfPlayerEnteredNewMap map player1 =
         if player1WallElementType ==  Map.Door then
             case String.toInt (String.fromChar player1WellElement) of
                 Err msg ->
-                    Cmd.none
+                    {isPlayerInDoor = False, mapName = ""} -- should not happen, a door element should always be a number
                 Ok mapIndex ->
                     case Array.get mapIndex map.doors of
                         Nothing ->
-                            Cmd.none
+                           {isPlayerInDoor = False, mapName = ""} -- should not happen, door information is missing in JSON
                         Just door ->
-                            loadMap door.name
+                            {isPlayerInDoor = True, mapName = door.name}
         else
-            Cmd.none
+            -- player not in a door
+           {isPlayerInDoor = False, mapName = ""}
+
+-- Display a new map
+-- Map can be loaded from member if it has already been loaded
+-- Or ir can be loaded from the server
+changeMap : String -> Model -> ( Model, Cmd Msg )
+changeMap mapName model  =
+    let
+        -- This code demostrates three different ways to construct a computation
+        -- that involves multiple functions
+
+        -- version 1 - using variables to capture results of each function
+        -- matchingMaps = List.filter (\room -> room.name == mapName) model.maps
+        -- matchingMap = List.head matchingMaps
+
+        -- version 2 - combining multiple function calls into a single line
+        -- matchingMap = List.head (List.filter (\room -> room.name == mapName) model.maps)
+
+        -- version 3 - using |>
+        matchingMap = 
+             model.maps
+             |> List.filter (\room -> room.name == mapName)
+             |> List.head
+
+        previousMapName = model.map.name
+    in
+        case matchingMap of
+            Just map ->
+                -- room has already been loaded into memory
+                ( 
+                    {model  
+                        | map = map
+                        , player1 = Player.getPlayerPositionAfterEnteringRoom model.player1 map previousMapName
+                        , player2 = Player.getPlayerPositionAfterEnteringRoom model.player2 map previousMapName
+                    }
+                    , Cmd.none
+                )
+               
+            Nothing ->
+                -- map not loaded, so nee to load from server
+                (
+                    model
+                    , loadMapFromServer mapName
+                )
 
 
 -- --------------------------------------------------------
