@@ -26,6 +26,7 @@ renderSingleElement location element =
         case element of
             "#" -> ("icon", "brick-wall-grey-brown") -- wall
             "B" -> ("icon", "stone-wall-brown-grey") -- wall
+            "F" -> ("icon", "forest") -- wall
             "$" -> ("icon", "crown-coin-gold") -- prize
             "Player1" -> ("icon", "swordman-blue") -- player 1
             "Player2" -> ("icon", "swordwoman-yellow") -- player 2

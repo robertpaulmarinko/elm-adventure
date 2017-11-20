@@ -59,6 +59,7 @@ getWallElementType wallsAsArray location =
         '7' -> Door
         '8' -> Door
         '9' -> Door
+        'F' -> Wall
         _ ->   Wall
 
 initEmptyMap: Map
