@@ -46,8 +46,8 @@ type alias Model =
       , player2 : Player.Player
       , player1Arrow : Player.PlayerArrow
       , player2Arrow : Player.PlayerArrow
-      , map : Map.Map
-      , maps : List Map.Map
+      , map : Map.Map  -- the current map
+      , maps : List Map.Map -- all maps loaded into memory
       , treasures : List Treasure.Treasure
       , monsters: List Monster.Monster
       , gameStarted: Bool
@@ -126,10 +126,14 @@ update msg model =
 
         GenerateRandomLocations locations ->
             -- Triggered by the Random.generate statement in MapLoaded
-            ( { model 
-                | treasures = Treasure.initTreasures (List.take 10 locations) "$" 
-                , monsters = Monster.initMonsters (List.drop 10 locations) "M" }
-                , Cmd.none)
+            -- Called the first time a room is loaded, to add treasure and monsters
+            ( 
+                { model 
+                    | treasures = Treasure.initTreasures (List.take 10 locations) "$" 
+                    , monsters = Monster.initMonsters (List.drop 10 locations) "M" 
+                }
+                , Cmd.none
+            )
 
 
         KeyboardMsg keyMsg ->
@@ -285,13 +289,30 @@ changeMap mapName model  =
              |> List.head
 
         previousMapName = model.map.name
+
+        -- update the current map with the latest treasure and monster information
+        previousMap = model.map
+        updatedPreviousMap =
+            {
+               previousMap
+                    | treasures = model.treasures
+            }
+
+        -- put the update d map into the list of maps
+        updatedMaps = 
+            model.maps
+            |> List.filter (\room -> room.name /= model.map.name) -- take all maps except th one we are updating
+            |> List.append (List.singleton  updatedPreviousMap)   -- put the updated map into the list
     in
         case matchingMap of
             Just map ->
                 -- room has already been loaded into memory
                 ( 
                     {model  
-                        | map = map
+                        | map = map   -- swith to the new map
+                        , treasures = map.treasures -- update the treasures from the new map
+                        , maps = updatedMaps -- update the list of maps, to reflect changes to the previous maps
+                        -- put the players at the correct starting locations
                         , player1 = Player.getPlayerPositionAfterEnteringRoom model.player1 map previousMapName
                         , player2 = Player.getPlayerPositionAfterEnteringRoom model.player2 map previousMapName
                     }
@@ -299,9 +320,11 @@ changeMap mapName model  =
                 )
                
             Nothing ->
-                -- map not loaded, so nee to load from server
+                -- map not loaded, so need to load from server
                 (
-                    model
+                    {model
+                        | maps = updatedMaps -- update the list of maps, to reflect changes to the previous maps
+                    }
                     , loadMapFromServer mapName
                 )
 
