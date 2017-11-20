@@ -3,10 +3,10 @@ module Player exposing (Player, PlayerArrow, initPlayer, getPlayersNewLocation, 
 import Display exposing (Location)
 import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
 import Treasure exposing (Treasure)
-import Monster exposing (Monster)
+import Monster
+import MonsterType exposing (Monster)
 
 import Array exposing (Array)
-import Debug
 
 type alias Player =
     {   location: Display.Location

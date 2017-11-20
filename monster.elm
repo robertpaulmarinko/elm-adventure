@@ -1,13 +1,9 @@
-module Monster exposing (Monster, initMonsters, moveMonsters, isAnyMonsterAtLocation)
+module Monster exposing (initMonsters, moveMonsters, isAnyMonsterAtLocation)
 
+import MonsterType exposing (Monster)
 import Display exposing (Location)
 import Map exposing (WallsAsArray, ElementType, getWallElement, getWallElementType)
 
-type alias Monster =
-    {   location: Display.Location
-      , direction: Display.Location
-      , element: String
-    }
 
 initMonster : Location -> String -> Monster
 initMonster location element =

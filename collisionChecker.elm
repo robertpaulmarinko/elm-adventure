@@ -1,7 +1,7 @@
 module CollisionChecker exposing (updateMonsterList)
 
 import Player exposing (PlayerArrow)
-import Monster exposing (Monster)
+import MonsterType exposing (Monster)
 
 updateMonsterList : List Monster -> Player.PlayerArrow -> Player.PlayerArrow -> List Monster
 updateMonsterList monsterList player1Arrow player2Arrow =

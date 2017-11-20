@@ -8,6 +8,7 @@ import Json.Decode exposing (..)
 
 import Display exposing (Location)
 import Treasure
+import MonsterType exposing (Monster)
 
 type alias Walls = List String
 type alias WallsAsArray = Array (Array Char)
@@ -26,6 +27,7 @@ type alias Map = {
     , wallsMaxY: Int
     , doors: Array DoorData
     , treasures : List Treasure.Treasure
+    , monsters : List MonsterType.Monster
 }
 
 type ElementType = Empty | Wall | Prize | Door
@@ -69,6 +71,7 @@ initEmptyMap =
         , wallsMaxY = 0 
         , doors = Array.fromList []
         , treasures = []
+        , monsters = []
     }
 
 loadMap: MapJson -> Map  
@@ -99,6 +102,7 @@ loadMap mapJson =
             , wallsMaxY = wallsMaxY
             , doors = Array.fromList mapJson.doors
             , treasures = []
+            , monsters = []
         }
 
 -- --------------------------------------------------------

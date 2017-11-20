@@ -28,6 +28,7 @@ import Player
 import Treasure
 import Monster
 import CollisionChecker
+import MonsterType
 
 type Msg 
     = StartGame
@@ -49,7 +50,7 @@ type alias Model =
       , map : Map.Map  -- the current map
       , maps : List Map.Map -- all maps loaded into memory
       , treasures : List Treasure.Treasure
-      , monsters: List Monster.Monster
+      , monsters: List MonsterType.Monster
       , gameStarted: Bool
     }
 
@@ -290,12 +291,14 @@ changeMap mapName model  =
 
         previousMapName = model.map.name
 
-        -- update the current map with the latest treasure and monster information
+        -- update the previous map with the latest treasure and monster information
+        -- so it can be reloaded if the room is reentered.
         previousMap = model.map
         updatedPreviousMap =
             {
                previousMap
                     | treasures = model.treasures
+                    , monsters = model.monsters
             }
 
         -- put the update d map into the list of maps
@@ -311,6 +314,7 @@ changeMap mapName model  =
                     {model  
                         | map = map   -- swith to the new map
                         , treasures = map.treasures -- update the treasures from the new map
+                        , monsters = map.monsters -- update the monsters from the new map
                         , maps = updatedMaps -- update the list of maps, to reflect changes to the previous maps
                         -- put the players at the correct starting locations
                         , player1 = Player.getPlayerPositionAfterEnteringRoom model.player1 map previousMapName
